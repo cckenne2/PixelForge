@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+.env
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Data & artifacts
+data/raw/
+data/processed/
+experiments/checkpoints/
+experiments/logs/
+lightning_logs/
+wandb/
+repo_skeleton.txt
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.npz
+
+# Jupyter
+.ipynb_checkpoints/
