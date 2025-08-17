@@ -1,30 +1,90 @@
+# =========================
+# PixelForge .gitignore
+# =========================
+
+##########
 # Python
+##########
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 *.pyd
+
+##########
+# Packaging / build
+##########
+build/
+dist/
+.eggs/
 *.egg-info/
+*.egg
+
+##########
+# Virtual envs (local)
+##########
 .venv/
+venv/
+env/
+.conda/
 .env
 
-# OS/editor
+##########
+# OS / Editors
+##########
 .DS_Store
+Thumbs.db
+desktop.ini
 .vscode/
 .idea/
 
-# Data & artifacts
-data/raw/
-data/processed/
-experiments/checkpoints/
-experiments/logs/
+##########
+# Notebooks / tooling caches
+##########
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+coverage.xml
+htmlcov/
+
+##########
+# Data (keep only tiny demo samples)
+##########
+/data/**                  # ignore everything under data
+!/data/samples/**         # ...except tiny demo images you want versioned
+!/data/.gitkeep           # allow an empty marker if you use one
+data/**/_tmp/**           # temp zips/extractions
+data/**/LR_*/**           # generated LR images (reproducible)
+data/raw/**               # never commit raw sources
+data/processed/**         # processed datasets are reproducible
+
+# (Optional self-documenting examples; redundant with /data/**)
+/data/DIV2K/**
+/data/Flickr2K/**
+
+##########
+# Training artifacts & logs
+##########
+/experiments/logs/**
+/experiments/checkpoints/**
 lightning_logs/
 wandb/
-repo_skeleton.txt
+mlruns/                   # if you use MLflow
+
+# Model / large artifacts
 *.pt
 *.pth
 *.ckpt
 *.h5
 *.npz
+*.onnx
+*.zip
+*.tar
+*.tar.gz
 
-# Jupyter
-.ipynb_checkpoints/
+##########
+# Misc logs / temp
+##########
+*.log
+*.tmp
+*.temp
