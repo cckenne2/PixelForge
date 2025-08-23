@@ -61,6 +61,8 @@ data/processed/**         # processed datasets are reproducible
 # (Optional self-documenting examples; redundant with /data/**)
 /data/DIV2K/**
 /data/Flickr2K/**
+/data/HR/**
+/data/LR_bicubic/**
 
 ##########
 # Training artifacts & logs
