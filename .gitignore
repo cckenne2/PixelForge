@@ -62,10 +62,7 @@ data/processed/**         # processed datasets are reproducible
 /data/DIV2K/**
 /data/Flickr2K/**
 /data/HR/**
-<<<<<<< HEAD
 /data/LR_bicubic/**
-=======
->>>>>>> 46802ce91f8f7a5fa50df6a7e34e68a514874c84
 
 ##########
 # Training artifacts & logs
