@@ -2,6 +2,7 @@ PixelForge/
 ├─ README.md
 ├─ .gitignore
 ├─ requirements.txt          # start minimal; grow later
+├─ repo_skeleton.txt         
 ├─ pyproject.toml            # optional; add later if you prefer
 ├─ src/
 │  └─ upscaler_gan/          # your Python package (rename if you pick a repo name)
@@ -13,13 +14,17 @@ PixelForge/
 │     ├─ utils/              # misc helpers (logging, metrics, viz)
 │     └─ config/             # YAML configs for experiments
 ├─ notebooks/                # quick experiments & EDA
+│     └─ config/
 ├─ data/
 │  ├─ raw/                   # never committed
 │  ├─ processed/             # preprocessed/patches (ignored)
-│  └─ samples/               # a few tiny images for smoke tests
+│  ├─ samples/               # a few tiny images for smoke tests
+│  ├─ HR/                    # high-resolution images
+│  └─ LR_bicubic/            # low-resolution bicubic images
 ├─ experiments/
 │  ├─ logs/                  # tensorboard/wandb logs (ignored)
 │  └─ checkpoints/           # model weights (ignored)
 ├─ scripts/                  # CLI entrypoints: train.py, prepare_data.py, eval.py
+│  └─ download_div2k.py      # download dataset script
 ├─ tests/                    # unit tests (start small)
 └─ docs/                     # optional: diagrams, notes
