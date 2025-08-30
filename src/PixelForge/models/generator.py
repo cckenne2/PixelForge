@@ -1,4 +1,4 @@
-# src/upscaler_gan/models/generator.py
+# src/PixelForge/models/generator.py
 import math
 import torch
 import torch.nn as nn
