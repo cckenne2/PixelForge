@@ -1,0 +1,21 @@
+# src/PixelForge/config/baseline.yaml
+scale: 4              # {2,4,8}
+batch_size: 4
+steps: 200            # small default; increase later
+lr: 0.0002
+alpha: 0.0            # faithful end of the knob for now
+img_size_hr: 96
+num_workers: 0        # Windows-friendly
+pin_memory: true
+
+data:
+  root_hr: "..\\data"
+  fallback: "..\\data\\samples"
+
+model:
+  n_feats: 64
+  n_res: 4
+
+checkpoint:
+  dir: "experiments/checkpoints"
+  name: "gen_v1_baseline.pt"
