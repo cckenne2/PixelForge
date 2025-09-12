@@ -27,7 +27,7 @@ def train_l1(gen, dataloader, device, *, steps=100, lr=2e-4, alpha=0.0, log_ever
     opt = torch.optim.Adam(gen.parameters(), lr=lr, betas=(0.9, 0.99))
     
     # Setup gradient scaler for mixed precision training (if on CUDA)
-    scaler = GradScaler(device_type=device.type if device.type == "cuda" else None)
+    scaler = GradScaler(device=device.type if device.type == "cuda" else None)
     
     # Track loss history and time
     loss_hist = []

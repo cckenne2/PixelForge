@@ -26,7 +26,9 @@ class PairedOnTheFlyDataset(Dataset):
         self.paths = []
         
         # Try to load images from primary directory
-        root_hr = Path(root_hr)
+        root_hr = Path(root_hr / "train") if (root_hr / "train").exists() else Path(root_hr)
+        if not (root_hr.exists() and root_hr.is_dir()):
+            raise FileNotFoundError(f"Directory not found: {root_hr}")
         if root_hr.exists():
             self.paths = [p for p in root_hr.rglob("*") if p.suffix.lower() in IMG_EXTS]
         
