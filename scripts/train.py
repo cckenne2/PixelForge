@@ -28,6 +28,23 @@ def gpu_monitor(stop_event):
         
         time.sleep(2)  # Update every 2 seconds
 
+def make_loader(cfg_block, scale, img_size_hr, batch_size, num_workers, pin_memory, shuffle):
+    ds = PairedOnTheFlyDataset(
+        Path(cfg_block["root_hr"]),
+        Path(cfg_block["fallback"]),
+        scale=scale,
+        patch_hr=img_size_hr,
+    )
+    return DataLoader(
+        ds,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        drop_last=True,
+        persistent_workers=(num_workers > 0)
+    )
+
 def main(cfg):
     # Set data directory path
     DATA_ROOT = Path(cfg["data"]["root_hr"])
@@ -64,24 +81,22 @@ def main(cfg):
         monitor_thread.start()
 
     try:
-        # Initialize dataset
-        ds = PairedOnTheFlyDataset(
-            DATA_ROOT,
-            Path(cfg["data"]["fallback"]),
-            scale=cfg["scale"],
-            patch_hr=cfg["img_size_hr"],
-        )
-
-        # Optimize DataLoader for GPU
-        dl = DataLoader(
-            ds, 
-            batch_size=cfg["batch_size"],
-            shuffle=True,
-            num_workers=cfg["num_workers"] if device.type == "cuda" else 0,  # Disable workers on CPU
-            pin_memory=device.type == "cuda",  # Only pin memory for GPU
-            drop_last=True,
-            persistent_workers=cfg["num_workers"] > 0 and device.type == "cuda"
-        )
+        # Train loader
+        dl = make_loader(cfg["data"], cfg["scale"], cfg["img_size_hr"],
+                         cfg["batch_size"], cfg["num_workers"] if torch.cuda.is_available() else 0,
+                         pin_memory=torch.cuda.is_available(), shuffle=True)
+        
+        val_dl = None
+        if cfg.get("val", {}).get("enabled", False):
+            vcfg = cfg["val"]
+            val_dl = make_loader(
+                {"root_hr": vcfg["root_hr"], "fallback": vcfg["fallback"]},
+                cfg["scale"], cfg["img_size_hr"],
+                vcfg.get("batch_size", cfg["batch_size"]),
+                cfg["num_workers"] if torch.cuda.is_available() else 0,
+            pin_memory=torch.cuda.is_available(),
+            shuffle=False
+            )
 
         # Initialize model with proper device placement
         mcfg = cfg["model"]
@@ -99,10 +114,11 @@ def main(cfg):
             print("\nStarting training...")
 
         # Train the model
-        stats = train_l1(gen, dl, device,
-                         steps=cfg["steps"],
-                         lr=cfg["lr"],
-                         alpha=cfg["alpha"])
+        stats = train_l1(
+            gen, dl, device,
+            steps=cfg["steps"], lr=cfg["lr"], alpha=cfg["alpha"],
+            val_dataloader=val_dl, val_every=cfg.get("val", {}).get("every", 50)
+        )
 
         # Save model
         ck = cfg["checkpoint"]
