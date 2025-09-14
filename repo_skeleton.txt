@@ -1,30 +1,38 @@
 PixelForge/
 ├─ README.md
 ├─ .gitignore
-├─ requirements.txt          # start minimal; grow later
+├─ requirements.txt          # PyPI dependencies (torch, torchvision, etc.)
+├─ environment.yml           # Conda environment specification
 ├─ repo_skeleton.txt         
-├─ pyproject.toml            # optional; add later if you prefer
+├─ pyproject.toml            # Python packaging config (currently empty)
 ├─ src/
-│  └─ upscaler_gan/          # your Python package (rename if you pick a repo name)
+│  └─ PixelForge/            # Main Python package
 │     ├─ __init__.py
-│     ├─ data/               # dataset utilities (loaders, transforms)
-│     ├─ models/             # generator, discriminator, perceptual loss nets
-│     ├─ train/              # training loop, lightning/pl utilities
-│     ├─ infer/              # inference scripts/functions
-│     ├─ utils/              # misc helpers (logging, metrics, viz)
-│     └─ config/             # YAML configs for experiments
-├─ notebooks/                # quick experiments & EDA
-│     └─ config/
-├─ data/
-│  ├─ raw/                   # never committed
-│  ├─ processed/             # preprocessed/patches (ignored)
-│  ├─ samples/               # a few tiny images for smoke tests
-│  ├─ HR/                    # high-resolution images
-│  └─ LR_bicubic/            # low-resolution bicubic images
-├─ experiments/
-│  ├─ logs/                  # tensorboard/wandb logs (ignored)
-│  └─ checkpoints/           # model weights (ignored)
-├─ scripts/                  # CLI entrypoints: train.py, prepare_data.py, eval.py
-│  └─ download_div2k.py      # download dataset script
-├─ tests/                    # unit tests (start small)
-└─ docs/                     # optional: diagrams, notes
+│     ├─ data/               # Dataset utilities (loaders, transforms)
+│     │  └─ paired.py        # On-the-fly HR/LR paired dataset
+│     ├─ models/             # Neural network architectures
+│     │  └─ generator.py     # Upscaling generator with AlphaMLP conditioning
+│     ├─ train/              # Training utilities and loops
+│     │  ├─ train_l1.py      # L1 loss training implementation
+│     │  └─ validate.py      # Validation utilities
+│     ├─ utils/              # Helper functions
+│     │  └─ metrics.py       # Evaluation metrics (PSNR, SSIM, etc.)
+│     └─ config/             # YAML configuration files
+│        └─ baseline.yaml    # Default training configuration
+├─ notebooks/                # Jupyter notebooks for experiments & EDA
+│  ├─ 01_data_prep.ipynb     # Data preparation and analysis
+│  └─ 02_model_prototype.ipynb # Model prototyping and testing
+├─ scripts/                  # CLI entry points and utilities
+│  ├─ train.py               # Main training script
+│  └─ download_div2k.py      # DIV2K dataset download utility
+├─ data/                     # Data directory (gitignored except samples)
+│  ├─ raw/                   # Raw datasets (never committed)
+│  ├─ processed/             # Preprocessed data (gitignored)
+│  ├─ samples/               # Small demo images for testing
+│  ├─ HR/                    # High-resolution images
+│  └─ LR_bicubic/            # Low-resolution bicubic downscaled images
+├─ experiments/              # Training artifacts (gitignored)
+│  ├─ logs/                  # Training logs, tensorboard files
+│  └─ checkpoints/           # Model weights and checkpoints
+├─ tests/                    # Unit tests (not yet implemented)
+└─ docs/                     # Documentation (not yet implemented)
