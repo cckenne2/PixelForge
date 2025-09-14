@@ -69,6 +69,7 @@ data/processed/**         # processed datasets are reproducible
 ##########
 /experiments/logs/**
 /experiments/checkpoints/**
+/experiments/infer/**
 lightning_logs/
 wandb/
 mlruns/                   # if you use MLflow
