@@ -1,9 +1,18 @@
-torch
-torchvision
-numpy
-pandas
-pillow
-tqdm
-pyyaml
-matplotlib
-plotly
+# Core deep learning framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Image processing and data handling
+pillow>=9.0.0
+numpy>=1.21.0
+
+# Configuration and utilities
+pyyaml>=6.0
+tqdm>=4.64.0
+
+# Optional: for analysis and visualization
+matplotlib>=3.5.0
+plotly>=5.0.0
+
+# Optional: for validation and testing
+psutil>=5.9.0
