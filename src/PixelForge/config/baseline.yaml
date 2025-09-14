@@ -10,6 +10,12 @@ windows:
   data:
     root_hr: "data/HR"
     fallback: "data/samples"
+  val:
+    enabled: true
+    every: 50
+    root_hr: "data/HR"
+    fallback: "data/samples"
+    batch_size: 4
   model:
     n_feats: 64
     n_res: 4
@@ -29,6 +35,12 @@ linux:
   data:
     root_hr: "data/HR"
     fallback: "data/samples"
+  val:
+    enabled: true
+    every: 50
+    root_hr: "data/HR"
+    fallback: "data/samples"
+    batch_size: 4
   model:
     n_feats: 64
     n_res: 4
