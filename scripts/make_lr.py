@@ -55,15 +55,21 @@ def _gaussian_blur(img_t: torch.Tensor, sigma: float) -> torch.Tensor:
     k1d = _gaussian_kernel1d(sigma, img_t.dtype, img_t.device)
     kx = k1d.view(1, 1, 1, -1)
     ky = k1d.view(1, 1, -1, 1)
-    img_t = F.conv2d(img_t, kx.repeat(c, 1, 1, 1), padding=(0, k1d.numel() // 2), groups=c)
-    img_t = F.conv2d(img_t, ky.repeat(c, 1, 1, 1), padding=(k1d.numel() // 2, 0), groups=c)
-    return img_t
+    # reflect-pad to avoid edge darkening
+    pad_x = k1d.numel() // 2
+    pad_y = k1d.numel() // 2
+    x = F.pad(img_t, (pad_x, pad_x, 0, 0), mode="reflect")
+    x = F.conv2d(x, kx.repeat(c, 1, 1, 1), padding=0, groups=c)
+    x = F.pad(x, (0, 0, pad_y, pad_y), mode="reflect")
+    x = F.conv2d(x, ky.repeat(c, 1, 1, 1), padding=0, groups=c)
+    return x
 
 def downscale_once(hr: Image.Image, scale: int, method: str, gamma_aware: bool, preblur_sigma: float) -> Image.Image:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
     if device.type == "cpu":
-        if preblur_sigma > 0:
-            hr = hr.filter(ImageFilter.GaussianBlur(radius=preblur_sigma))
+        # CPU path: keep operations in float32 to avoid quantization, and blur in linear when requested
         method_map_pil = {
             "BICUBIC": Image.BICUBIC,
             "LANCZOS": Image.LANCZOS,
@@ -75,35 +81,61 @@ def downscale_once(hr: Image.Image, scale: int, method: str, gamma_aware: bool, 
             arr = (np.asarray(hr).astype("float32") / 255.0)
             a = (arr <= 0.04045).astype(np.float32)
             lin = a * (arr / 12.92) + (1 - a) * (((arr + 0.055) / 1.055) ** 2.4)
-            lin_img = Image.fromarray((lin * 255.0 + 0.5).astype("uint8"), mode="RGB")
-            lr_lin = lin_img.resize((hr.width // scale, hr.height // scale), resample=resample)
+            if preblur_sigma > 0:
+                # approximate Gaussian blur on CPU using PIL in linear domain
+                lin_img = Image.fromarray((np.clip(lin, 0, 1) * 255.0 + 0.5).astype("uint8"), mode="RGB")
+                lin_img = lin_img.filter(ImageFilter.GaussianBlur(radius=preblur_sigma))
+                lin = np.asarray(lin_img).astype("float32") / 255.0
+            # resize in linear
+            lin_img = Image.fromarray((np.clip(lin, 0, 1) * 255.0 + 0.5).astype("uint8"), mode="RGB")
+            lr_lin = lin_img.resize((hr.width // scale, hr.height // scale), resample=resample if method.upper() != "BOX" else Image.BOX)
             arr = (np.asarray(lr_lin).astype("float32") / 255.0)
             a = (arr <= 0.0031308).astype(np.float32)
             srgb = a * (arr * 12.92) + (1 - a) * (1.055 * (arr ** (1.0 / 2.4)) - 0.055)
             return Image.fromarray((np.clip(srgb, 0, 1) * 255.0 + 0.5).astype("uint8"), mode="RGB")
         else:
-            return hr.resize((hr.width // scale, hr.height // scale), resample=resample)
+            if preblur_sigma > 0:
+                hr = hr.filter(ImageFilter.GaussianBlur(radius=preblur_sigma))
+            # For BOX, PIL.BOX is appropriate; otherwise use selected resampler
+            return hr.resize((hr.width // scale, hr.height // scale), resample=resample if method.upper() != "BOX" else Image.BOX)
 
     t = _pil_to_tensor(hr, device)
-    if preblur_sigma > 0:
-        t = _gaussian_blur(t, preblur_sigma)
 
     mode_map = {
         "BICUBIC": "bicubic",
-        "LANCZOS": "bicubic",
+        "LANCZOS": "bicubic",  # approximated on CUDA
         "BOX": "area",
         "BILINEAR": "bilinear",
     }
     mode = mode_map.get(method.upper(), "bicubic")
     size = (hr.height // scale, hr.width // scale)
 
+    # BOX exact for integer scales using avg_pool2d
+    def _box_downsample(x: torch.Tensor) -> torch.Tensor:
+        return F.avg_pool2d(x, kernel_size=scale, stride=scale)
+
     if gamma_aware:
         t_lin = _srgb_to_linear(t)
-        lr_lin = F.interpolate(t_lin, size=size, mode=mode, align_corners=False if mode != "area" else None, antialias=True)
+        if preblur_sigma > 0:
+            t_lin = _gaussian_blur(t_lin, preblur_sigma)
+        if method.upper() == "BOX":
+            lr_lin = _box_downsample(t_lin)
+        elif mode == "area":
+            lr_lin = F.interpolate(t_lin, size=size, mode="area")
+        else:
+            lr_lin = F.interpolate(t_lin, size=size, mode=mode, align_corners=False, antialias=True)
         t_srgb = _linear_to_srgb(lr_lin)
         return _tensor_to_pil(t_srgb)
     else:
-        lr = F.interpolate(t, size=size, mode=mode, align_corners=False if mode != "area" else None, antialias=True)
+        x = t
+        if preblur_sigma > 0:
+            x = _gaussian_blur(x, preblur_sigma)
+        if method.upper() == "BOX":
+            lr = _box_downsample(x)
+        elif mode == "area":
+            lr = F.interpolate(x, size=size, mode="area")
+        else:
+            lr = F.interpolate(x, size=size, mode=mode, align_corners=False, antialias=True)
         return _tensor_to_pil(lr)
 def main():
     ap = argparse.ArgumentParser("Regenerate LR images from HR")
@@ -129,6 +161,15 @@ def main():
         print(f"No images under {in_root}")
         return
 
+    # Optional: print device selection when verbose
+    if args.verbose:
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            name = torch.cuda.get_device_name(0)
+            print(f"Using CUDA: {name}")
+        else:
+            print("Using CPU")
+
     for i, p in enumerate(paths, 1):
         try:
             hr = Image.open(p).convert("RGB")
@@ -147,11 +188,11 @@ def main():
 
         if args.ext.lower() in [".jpg", ".jpeg"]:
             # Save *safely* if you must use JPEG: high quality, disable subsampling
-            lr.save(out_path, quality=95, subsampling=0, optimize=True)
+            lr.save(out_path, quality=95, subsampling=0, optimize=True, progressive=True)
         else:
-            lr.save(out_path, optimize=True)
+            lr.save(out_path, optimize=True, compress_level=6)
 
-    if args.verbose or (i % 100 == 0 or i == len(paths)):
+        if args.verbose or (i % 100 == 0 or i == len(paths)):
             print(f"[{i}/{len(paths)}] {p.name} -> {out_path}")
 
     print(f"\nWrote {len(paths)} LR images to: {out_root.resolve()}")
