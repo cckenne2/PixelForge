@@ -87,6 +87,11 @@ def main(cfg):
         dl = make_loader(cfg["data"], cfg["scale"], cfg["img_size_hr"],
                          cfg["batch_size"], cfg["num_workers"] if torch.cuda.is_available() else 0,
                          pin_memory=torch.cuda.is_available(), shuffle=True)
+        try:
+            mode = "precomputed LR" if getattr(dl.dataset, "mode_precomputed", False) else "on-the-fly bicubic"
+            print(f"Train data: {mode} | HR: {cfg['data']['root_hr']} | LR: {cfg['data'].get('root_lr', 'N/A')} | pairs: {len(dl.dataset)}")
+        except Exception as e:
+            print(f"Train data: info unavailable ({e})")
         
         val_dl = None
         if cfg.get("val", {}).get("enabled", False):
@@ -99,6 +104,11 @@ def main(cfg):
             pin_memory=torch.cuda.is_available(),
             shuffle=False
             )
+            try:
+                vmode = "precomputed LR" if getattr(val_dl.dataset, "mode_precomputed", False) else "on-the-fly bicubic"
+                print(f"Val data:   {vmode} | HR: {vcfg['root_hr']} | LR: {vcfg.get('root_lr', 'N/A')} | pairs: {len(val_dl.dataset)}")
+            except Exception as e:
+                print(f"Val data: info unavailable ({e})")
 
         # Initialize model with proper device placement
         mcfg = cfg["model"]
