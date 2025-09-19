@@ -1,0 +1,49 @@
+windows:
+  scale: 4
+  batch_size: 4
+  steps: 200
+  lr: 0.0002
+  alpha: 0.0
+  img_size_hr: 96
+  num_workers: 0
+  pin_memory: true
+  data:
+    root_hr: "data/HR"
+    fallback: "data/samples"
+  val:
+    enabled: true
+    every: 50
+    root_hr: "data/HR"
+    fallback: "data/samples"
+    batch_size: 4
+  model:
+    n_feats: 64
+    n_res: 4
+  checkpoint:
+    dir: "experiments/checkpoints"
+    name: "gen_v1_baseline.pt"
+
+linux:
+  scale: 4
+  batch_size: 4
+  steps: 200
+  lr: 0.0002
+  alpha: 0.0
+  img_size_hr: 96
+  num_workers: 4
+  pin_memory: false
+  data:
+    root_hr: "data/HR"
+    fallback: "data/samples"
+  val:
+    enabled: true
+    every: 50
+    root_hr: "data/HR"
+    fallback: "data/samples"
+    batch_size: 4
+  model:
+    n_feats: 64
+    n_res: 4
+  checkpoint:
+    dir: "experiments/checkpoints"
+    name: "gen_v1_baseline.pt"
