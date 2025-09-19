@@ -29,9 +29,11 @@ def gpu_monitor(stop_event):
         time.sleep(2)  # Update every 2 seconds
 
 def make_loader(cfg_block, scale, img_size_hr, batch_size, num_workers, pin_memory, shuffle):
+    root_lr = cfg_block.get("root_lr", None)
     ds = PairedOnTheFlyDataset(
         Path(cfg_block["root_hr"]),
         Path(cfg_block["fallback"]),
+        Path(root_lr) if root_lr else None,
         scale=scale,
         patch_hr=img_size_hr,
     )
@@ -90,7 +92,7 @@ def main(cfg):
         if cfg.get("val", {}).get("enabled", False):
             vcfg = cfg["val"]
             val_dl = make_loader(
-                {"root_hr": vcfg["root_hr"], "fallback": vcfg["fallback"]},
+                {"root_hr": vcfg["root_hr"], "fallback": vcfg["fallback"], "root_lr": vcfg.get("root_lr")},
                 cfg["scale"], cfg["img_size_hr"],
                 vcfg.get("batch_size", cfg["batch_size"]),
                 cfg["num_workers"] if torch.cuda.is_available() else 0,
