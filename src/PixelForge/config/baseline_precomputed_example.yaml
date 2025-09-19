@@ -8,14 +8,14 @@ windows:
   num_workers: 0
   pin_memory: true
   data:
-    root_hr: "data/HR/train"
-    root_lr: "data/LR_bicubic/X4/train"
+    root_hr: "data/HR"
+    root_lr: "data/LR_bicubic/X4"
     fallback: "data/samples"
   val:
     enabled: true
     every: 50
-    root_hr: "data/HR/valid"
-    root_lr: "data/LR_bicubic/X4/valid"
+    root_hr: "data/HR"
+    root_lr: "data/LR_bicubic/X4"
     fallback: "data/samples"
     batch_size: 4
   model:

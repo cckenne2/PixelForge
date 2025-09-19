@@ -1,5 +1,5 @@
 windows:
-  scale: 4
+  scale: 2
   batch_size: 4
   steps: 200
   lr: 0.0002
@@ -8,12 +8,14 @@ windows:
   num_workers: 0
   pin_memory: true
   data:
-    root_hr: "data/HR"
+    root_hr: "data/HR/train"
+    root_lr: "data/LR_bicubic/X2/train"
     fallback: "data/samples"
   val:
     enabled: true
     every: 50
-    root_hr: "data/HR"
+    root_hr: "data/HR/valid"
+    root_lr: "data/LR_bicubic/X2/valid"
     fallback: "data/samples"
     batch_size: 4
   model:
@@ -24,7 +26,7 @@ windows:
     name: "gen_v1_baseline.pt"
 
 linux:
-  scale: 4
+  scale: 2
   batch_size: 4
   steps: 200
   lr: 0.0002
@@ -33,12 +35,14 @@ linux:
   num_workers: 4
   pin_memory: false
   data:
-    root_hr: "data/HR"
+    root_hr: "data/HR/train"
+    root_lr: "data/LR_bicubic/X2/train"
     fallback: "data/samples"
   val:
     enabled: true
     every: 50
-    root_hr: "data/HR"
+    root_hr: "data/HR/valid"
+    root_lr: "data/LR_bicubic/X2/valid"
     fallback: "data/samples"
     batch_size: 4
   model:
