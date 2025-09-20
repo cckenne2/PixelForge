@@ -108,7 +108,9 @@ class PairedOnTheFlyDataset(Dataset):
         return img.crop((left, top, left + W, top + H))
 
     def __len__(self): 
-        """Return the number of images in the dataset"""
+        """Return the number of samples available"""
+        if self.mode_precomputed:
+            return len(self.hr_lr_pairs)
         return len(self.paths)
 
     def __getitem__(self, idx):
