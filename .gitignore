@@ -73,6 +73,11 @@ data/processed/**         # processed datasets are reproducible
 /experiments/infer/x4_samples/*.png
 /experiments/infer/x8_samples/*.png
 /experiments/**/_tmp/**
+
+/data/SR_x4/samples/*.png
+/data/SR_x8/samples/*.png
+/data/samples/*.png
+
 lightning_logs/
 wandb/
 mlruns/                   # if you use MLflow
